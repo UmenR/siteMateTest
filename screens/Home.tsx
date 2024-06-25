@@ -1,7 +1,15 @@
 /* eslint-disable */
 
-import React, {useState, useEffect, useCallback} from 'react';
-import {View, TextInput, FlatList, Text, StyleSheet} from 'react-native';
+import React, {useState, useEffect, useCallback, useRef} from 'react';
+import {
+  View,
+  TextInput,
+  FlatList,
+  Text,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+} from 'react-native';
 import axios from 'axios';
 import debounce from 'lodash.debounce';
 
@@ -11,6 +19,9 @@ const HomeScreen = () => {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  //   Not used
+  let history = useRef(new Array());
+  const [error, setError] = useState(null);
 
   const fetchResults = async (searchQuery: any) => {
     if (!searchQuery) {
@@ -26,10 +37,12 @@ const HomeScreen = () => {
       const filteredData = response.data.articles.filter(
         article => article.title != '[Removed]',
       );
-      console.log(filteredData);
+      //   history.current = history.current ? history.current.push(searchQuery) : [searchQuery]
+      //   console.log(history.current);
       setResults(filteredData);
     } catch (error) {
-      console.error('Error fetching data:', error);
+      //   console.error('Error fetching data:', error);
+      setError('oops! something went wrong!');
     } finally {
       setIsLoading(false);
     }
@@ -51,8 +64,28 @@ const HomeScreen = () => {
     </View>
   );
 
+  const closeModal = () => {
+    setError(null);
+  };
+
   return (
     <View style={styles.container}>
+      {error && (
+        <Modal
+          transparent={true}
+          animationType="slide"
+          visible={!!error}
+          onRequestClose={closeModal}>
+          <View style={styles.modalBackground}>
+            <View style={styles.modalContainer}>
+              <Text style={styles.errorText}>{error}</Text>
+              <TouchableOpacity style={styles.closeButton} onPress={closeModal}>
+                <Text style={styles.closeButtonText}>Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+      )}
       <TextInput
         style={styles.input}
         placeholder="Search..."
@@ -91,6 +124,34 @@ const styles = StyleSheet.create({
     padding: 8,
     borderBottomColor: 'gray',
     borderBottomWidth: 1,
+  },
+  modalBackground: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContainer: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  errorText: {
+    marginBottom: 20,
+    fontSize: 18,
+    color: 'red',
+    textAlign: 'center',
+  },
+  closeButton: {
+    backgroundColor: '#2196F3',
+    padding: 10,
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
   },
 });
 
